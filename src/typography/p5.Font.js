@@ -169,7 +169,11 @@ p5.Font.prototype.textBounds = function(str, x = 0, y = 0, fontSize, opts) {
  * be removed from the polygon; the value represents the threshold angle to use
  * when determining whether two edges are collinear
  *
+ * <br>separatePaths - if set to true, returns a 2D Array [paths][points]
+ * separating each letter and path, to avoid a connecting line
+ *
  * @return {Array}  an array of points, each with x, y, alpha (the path angle)
+ *
  * @example
  * <div>
  * <code>
@@ -209,6 +213,40 @@ p5.Font.prototype.textBounds = function(str, x = 0, y = 0, fontSize, opts) {
  * </code>
  * </div>
  *
+ * @example
+ * <div>
+ * <code>
+ * let font, points;
+ *
+ * function preload() {
+ *   font = loadFont('assets/inconsolata.otf');
+ * }
+ *
+ * function setup() {
+ *   createCanvas(100, 100);
+ *   stroke(0);
+ *
+ *   points = font.textToPoints('p5', 0, 0, height * 0.7, {
+ *     sampleFactor: 5,
+ *     simplifyThreshold: 0,
+ *     separatePaths: true
+ *   });
+ * }
+ *
+ * function draw() {
+ *   background(255);
+ *   translate(width * 0.15, height * 0.7);
+ *   for (let i = 0; i < points.length; i++) {
+ *     beginShape();
+ *     for (let j = 0; j < points[i].length; j++) {
+ *       let p = points[i][j];
+ *       vertex(p.x + sin(j * 0.02 + frameCount * 0.1) * 2, p.y);
+ *     }
+ *     endShape(CLOSE);
+ *   }
+ * }
+ * </code>
+ * </div>
  */
 p5.Font.prototype.textToPoints = function(txt, x, y, fontSize, options) {
   let xoff = 0;
@@ -233,11 +271,19 @@ p5.Font.prototype.textToPoints = function(txt, x, y, fontSize, options) {
         paths = splitPaths(gpath.commands);
 
       for (let j = 0; j < paths.length; j++) {
+        let pathPts = [];
         const pts = pathToPoints(paths[j], options);
 
         for (let k = 0; k < pts.length; k++) {
           pts[k].x += xoff;
-          result.push(pts[k]);
+          if (options.separatePaths) {
+            pathPts.push(pts[k]);
+          } else {
+            result.push(pts[k]);
+          }
+        }
+        if (options.separatePaths) {
+          result.push(pathPts);
         }
       }
     }
