@@ -264,6 +264,7 @@ p5.Font.prototype.textToPoints = function(txt, x, y, fontSize, options) {
   fontSize = fontSize || this.parent._renderer._textSize;
 
   for (let i = 0; i < glyphs.length; i++) {
+    let glyphPts = [];
     if (!isSpace(i)) {
       // fix to #1817, #2069
 
@@ -276,16 +277,21 @@ p5.Font.prototype.textToPoints = function(txt, x, y, fontSize, options) {
 
         for (let k = 0; k < pts.length; k++) {
           pts[k].x += xoff;
-          if (options.separatePaths) {
+          if (options.separatePaths || options.separateGlyphs) {
             pathPts.push(pts[k]);
           } else {
             result.push(pts[k]);
           }
         }
-        if (options.separatePaths) {
+        if (options.separatePaths && !options.separateGlyphs) {
           result.push(pathPts);
+        } else if (options.separateGlyphs) {
+          glyphPts.push(pathPts);
         }
       }
+    }
+    if (options.separateGlyphs) {
+      result.push(glyphPts);
     }
 
     xoff += glyphs[i].advanceWidth * this._scale(fontSize);
